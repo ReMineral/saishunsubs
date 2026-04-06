@@ -3,189 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sakurazaka46 Profil Sync</title>
+    <title>Sakurazaka46 Member Manager</title>
     <style>
-        :root { --sakura: #e1007e; --sakura-light: #fce7f3; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fdf2f8; padding: 20px; color: #333; }
-        .container { max-width: 650px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(225,0,126,0.1); }
+        :root { --sakura: #e1007e; --bg: #f9fafb; }
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; text-align: center; }
         
-        header { text-align: center; margin-bottom: 25px; }
-        h2 { color: var(--sakura); margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
-        .subtitle { font-size: 13px; color: #888; margin-top: 5px; }
+        h1 { color: var(--sakura); font-weight: 800; margin-bottom: 5px; }
+        .last-update { font-size: 13px; color: #666; margin-bottom: 30px; }
 
-        .config-box { background: #f9fafb; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #ddd; }
-        .input-group { margin-bottom: 10px; }
-        label { display: block; font-size: 11px; font-weight: bold; color: #666; margin-bottom: 4px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 13px; }
-
-        button { 
-            width: 100%; padding: 16px; background: var(--sakura); color: white; border: none; 
-            border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(225, 0, 126, 0.3);
+        /* Grid Layout */
+        .member-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            gap: 20px; margin-bottom: 40px; 
         }
-        button:hover { background: #b80067; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(225, 0, 126, 0.4); }
-        button:disabled { background: #edb2d3; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        /* Progress & Preview */
-        .sync-area { margin-top: 25px; display: none; text-align: center; }
-        .member-preview { margin: 15px auto; width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--sakura); object-fit: cover; background: #eee; }
-        .progress-bar { width: 100%; background: #eee; border-radius: 20px; overflow: hidden; height: 14px; margin: 10px 0; }
-        .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--sakura), #ff69b4); transition: width 0.3s; }
-        
-        #status-log { 
-            margin-top: 20px; height: 150px; overflow-y: auto; background: #1e1e1e; 
-            color: #50fa7b; padding: 15px; font-family: 'Consolas', monospace; font-size: 12px; border-radius: 10px; text-align: left;
+        /* Card Design */
+        .card { 
+            background: white; border-radius: 12px; overflow: hidden; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s;
         }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; height: 180px; object-fit: cover; background: #eee; }
+        .card-info { padding: 10px; }
+        .name-jp { display: block; font-weight: bold; font-size: 14px; }
+        .name-en { display: block; font-size: 12px; color: #888; }
+
+        /* Floating Button Container */
+        .footer-action {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: white; padding: 15px 30px; border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 20px;
+        }
+
+        .btn-update {
+            background: var(--sakura); color: white; border: none; padding: 12px 25px;
+            border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .btn-update:hover { background: #b80067; }
+        .btn-update:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Loading Animation */
+        .loader {
+            width: 20px; height: 20px; border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--sakura); border-radius: 50%;
+            animation: spin 1s linear infinite; display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h2>Sakurazaka Sync Tool</h2>
-        <div class="subtitle">Update blogprofil.json secara otomatis ke GitHub</div>
-    </header>
-    
-    <div class="config-box">
-        <div class="input-group">
-            <label>GITHUB TOKEN (Pre-filled)</label>
-            <input type="password" id="github-token" value="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">
-        </div>
-        <div class="input-group">
-            <label>REPOSITORY PATH</label>
-            <input type="text" id="repo-name" placeholder="username/repo-name" value="">
-        </div>
-    </div>
+    <h1>🌸 Sakurazaka46 Profiles</h1>
+    <div class="last-update" id="timestamp">Memuat data...</div>
 
-    <button id="btn-update" onclick="runSync()">MULAI UPDATE DATA</button>
-
-    <div class="sync-area" id="sync-area">
-        <img src="" id="current-img" class="member-preview" alt="Member">
-        <div id="progress-text" style="font-size: 14px; font-weight: bold; color: var(--sakura);">Menyiapkan...</div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="fill"></div>
+    <div class="member-grid" id="member-grid">
         </div>
-    </div>
+</div>
 
-    <div id="status-log">Menunggu instruksi...</div>
+<div class="footer-action">
+    <div class="loader" id="sync-loader"></div>
+    <button class="btn-update" id="update-btn" onclick="triggerUpdate()">Update Member Data</button>
 </div>
 
 <script>
-    const PROXY_URL = "https://cors-proxy1.vercel.app/api/fetch?url=";
-    const TARGET_URL = "https://sakurazaka46.com/s/s46/search/artist";
-    const FILE_PATH = "blogprofil.json";
+    const REPO = "re-saishun/saishunsubs"; // Ganti dengan repo kamu
+    const JSON_PATH = "blogprofil.json";
 
-    function log(msg) {
-        const logBox = document.getElementById('status-log');
-        logBox.innerHTML += `<div>> ${msg}</div>`;
-        logBox.scrollTop = logBox.scrollHeight;
+    // 1. Ambil Data untuk Tampilan Preview
+    async function loadPreview() {
+        try {
+            const res = await fetch(`${JSON_PATH}?t=${Date.now()}`);
+            const data = await res.json();
+            const grid = document.getElementById('member-grid');
+            grid.innerHTML = "";
+
+            Object.values(data).forEach(m => {
+                grid.innerHTML += `
+                    <div class="card">
+                        <img src="${m.img}" loading="lazy">
+                        <div class="card-info">
+                            <span class="name-jp">${m.name_jp}</span>
+                            <span class="name-en">${m.name_romaji}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('timestamp').innerText = "Preview dari blogprofil.json saat ini";
+        } catch (e) {
+            console.error("Gagal load data preview", e);
+        }
     }
 
-    async function runSync() {
-        const token = document.getElementById('github-token').value;
-        const repo = document.getElementById('repo-name').value;
-        const btn = document.getElementById('btn-update');
-        const syncArea = document.getElementById('sync-area');
-        const fill = document.getElementById('fill');
-        const progText = document.getElementById('progress-text');
-        const previewImg = document.getElementById('current-img');
+    // 2. Trigger GitHub Action (Tanpa Token di Code)
+    async function triggerUpdate() {
+        const btn = document.getElementById('update-btn');
+        const loader = document.getElementById('sync-loader');
 
-        if (!repo) {
-            alert("Silakan isi nama Repository kamu!");
-            return;
-        }
+        // Untuk men-trigger GitHub Action dari Web secara langsung, 
+        // kamu memerlukan Personal Access Token (PAT).
+        // Karena kamu minta Token ditaruh di Secret, maka trigger-nya 
+        // dilakukan lewat Workflow Dispatch.
+        
+        const token = prompt("Masukkan GitHub Token untuk konfirmasi:");
+        if(!token) return;
 
         btn.disabled = true;
-        syncArea.style.display = 'block';
-        log("Mengambil data lama dari GitHub...");
+        loader.style.display = "block";
+        btn.innerText = "Syncing with GitHub...";
 
         try {
-            // 1. Ambil File dari GitHub
-            const getUrl = `https://api.github.com/repos/${repo}/contents/${FILE_PATH}`;
-            const resGit = await fetch(getUrl, { headers: { "Authorization": `token ${token}` } });
-            
-            if (!resGit.ok) throw new Error("Gagal akses GitHub. Cek nama Repo.");
-            
-            const fileData = await resGit.json();
-            const sha = fileData.sha;
-            // Handle decoding UTF-8 base64
-            let blogProfil = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
-
-            log("Memulai scraping website Sakurazaka46...");
-
-            // 2. Scraping Website
-            const resWeb = await fetch(PROXY_URL + encodeURIComponent(TARGET_URL));
-            const htmlText = await resWeb.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlText, 'text/html');
-            const memberBlocks = Array.from(doc.querySelectorAll('li.box'));
-
-            if (memberBlocks.length === 0) throw new Error("Data member tidak ditemukan.");
-
-            let updatedCount = 0;
-            for (let i = 0; i < memberBlocks.length; i++) {
-                const block = memberBlocks[i];
-                const nameRomaji = block.querySelector('.name')?.innerText.trim();
-                const imgTag = block.querySelector('img');
-                const kanaTag = block.querySelector('.kana');
-
-                if (nameRomaji) {
-                    let imgUrl = imgTag?.getAttribute('src');
-                    if (imgUrl && !imgUrl.startsWith('http')) imgUrl = "https://sakurazaka46.com" + imgUrl;
-                    
-                    // Preview di UI
-                    previewImg.src = imgUrl;
-                    progText.innerText = `Memproses: ${nameRomaji}`;
-                    
-                    // Update ke Object
-                    for (let key in blogProfil) {
-                        if (blogProfil[key].name_romaji?.toLowerCase() === nameRomaji.toLowerCase()) {
-                            blogProfil[key].img = imgUrl;
-                            if (kanaTag) blogProfil[key].name_jp = kanaTag.innerText.trim();
-                            updatedCount++;
-                        }
-                    }
-                }
-
-                // Update Progress Bar
-                const percent = Math.round(((i + 1) / memberBlocks.length) * 100);
-                fill.style.width = percent + "%";
-                await new Promise(r => setTimeout(r, 50)); // Efek visual biar keren
-            }
-
-            log(`Selesai scraping. ${updatedCount} data diperbarui.`);
-            log("Mengirim perubahan ke GitHub...");
-            progText.innerText = "Mengunggah ke GitHub...";
-
-            // 3. Push ke GitHub
-            const updatedContent = btoa(unescape(encodeURIComponent(JSON.stringify(blogProfil, null, 2))));
-            const putRes = await fetch(getUrl, {
-                method: "PUT",
-                headers: { 
-                    "Authorization": `token ${token}`,
-                    "Content-Type": "application/json"
+            const res = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/update_member.yml/dispatches`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/vnd.github+json"
                 },
-                body: JSON.stringify({
-                    message: "Auto-sync: Update member profiles via Web Tool",
-                    content: updatedContent,
-                    sha: sha
-                })
+                body: JSON.stringify({ ref: "main" })
             });
 
-            if (putRes.ok) {
-                log("DATABASE BERHASIL DIUPDATE!");
-                progText.innerText = "BERHASIL!";
+            if (res.ok) {
+                alert("Update dimulai! Silakan tunggu 1-2 menit lalu refresh halaman ini.");
             } else {
-                throw new Error("Gagal saat push ke GitHub.");
+                alert("Gagal memulai update. Cek Token atau Nama Workflow.");
             }
-
-        } catch (err) {
-            log(`ERROR: ${err.message}`);
-            progText.innerText = "GAGAL!";
+        } catch (e) {
+            alert("Terjadi kesalahan koneksi.");
         } finally {
             btn.disabled = false;
+            loader.style.display = "none";
+            btn.innerText = "Update Member Data";
         }
     }
+
+    window.onload = loadPreview;
 </script>
 
 </body>
