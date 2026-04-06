@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sakurazaka46 Profil Updater</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #e1007e; text-align: center; }
+        .info { font-size: 0.9em; color: #666; margin-bottom: 20px; text-align: center; }
+        
+        button { 
+            width: 100%; padding: 15px; background: #e1007e; color: white; border: none; 
+            border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s;
+        }
+        button:hover { background: #b80067; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        .progress-container { margin-top: 25px; display: none; }
+        .progress-bar { width: 100%; background: #eee; border-radius: 10px; overflow: hidden; height: 12px; }
+        .progress-fill { width: 0%; height: 100%; background: #e1007e; transition: width 0.3s; }
+        
+        #status-log { 
+            margin-top: 20px; height: 150px; overflow-y: auto; background: #222; 
+            color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sakurazaka46 Sync</h2>
+    <p class="info" id="last-update">Terakhir Update: Memuat...</p>
+    
+    <button id="btn-update" onclick="startUpdate()">Update blogprofil.json</button>
+
+    <div class="progress-container" id="progress-box">
+        <p style="font-size: 14px;" id="progress-text">Menghubungkan ke server...</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="fill"></div>
+        </div>
+    </div>
+
+    <div id="status-log">Menunggu perintah...</div>
+</div>
+
+<script>
+    const PROXY_URL = "https://cors-proxy1.vercel.app/api/fetch?url=";
+    const TARGET_URL = "https://sakurazaka46.com/s/s46/search/artist";
+    let blogProfil = {};
+
+    // Load data lama saat pertama buka
+    async function loadInitialData() {
+        try {
+            const res = await fetch('blogprofil.json');
+            blogProfil = await res.json();
+            document.getElementById('last-update').innerText = "Database Local Terdeteksi (" + Object.keys(blogProfil).length + " member)";
+            log("File blogprofil.json berhasil dimuat.");
+        } catch (e) {
+            log("Gagal memuat blogprofil.json. Pastikan file ada di folder yang sama.");
+        }
+    }
+
+    function log(msg) {
+        const logBox = document.getElementById('status-log');
+        logBox.innerHTML += `<div>> ${msg}</div>`;
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    async function startUpdate() {
+        const btn = document.getElementById('btn-update');
+        const progressBox = document.getElementById('progress-box');
+        const fill = document.getElementById('fill');
+        const progText = document.getElementById('progress-text');
+
+        btn.disabled = true;
+        progressBox.style.display = 'block';
+        log("Memulai proses scraping...");
+
+        try {
+            const response = await fetch(PROXY_URL + encodeURIComponent(TARGET_URL));
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            
+            const htmlText = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, 'text/html');
+            const memberBlocks = doc.querySelectorAll('li.box');
+
+            if (memberBlocks.length === 0) throw new Error("Gagal mengambil data member.");
+
+            let updatedCount = 0;
+            const total = memberBlocks.length;
+
+            memberBlocks.forEach((block, index) => {
+                const nameRomaji = block.querySelector('.name')?.innerText.trim();
+                const imgTag = block.querySelector('img');
+                const linkTag = block.querySelector('a');
+                const kanaTag = block.querySelector('.kana');
+
+                if (nameRomaji) {
+                    let imgUrl = imgTag?.getAttribute('src');
+                    if (imgUrl && !imgUrl.startsWith('http')) imgUrl = "https://sakurazaka46.com" + imgUrl;
+                    
+                    let linkUrl = linkTag?.getAttribute('href');
+                    if (linkUrl) linkUrl = "https://sakurazaka46.com" + linkUrl.split('?')[0];
+
+                    // Cocokkan dengan JSON yang ada
+                    for (let key in blogProfil) {
+                        if (blogProfil[key].name_romaji?.toLowerCase() === nameRomaji.toLowerCase()) {
+                            blogProfil[key].img = imgUrl;
+                            blogProfil[key].link = linkUrl;
+                            if (kanaTag) blogProfil[key].name_jp = kanaTag.innerText.trim();
+                            
+                            updatedCount++;
+                            log(`Updated: ${nameRomaji}`);
+                        }
+                    }
+                }
+
+                // Update Progress Bar
+                const percent = Math.round(((index + 1) / total) * 100);
+                fill.style.width = percent + "%";
+                progText.innerText = `Memproses: ${percent}%`;
+            });
+
+            log(`Selesai! ${updatedCount} member diperbarui.`);
+            downloadJson(blogProfil);
+
+        } catch (error) {
+            log("ERROR: " + error.message);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function downloadJson(data) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "blogprofil.json";
+        a.click();
+        log("File baru telah diunduh otomatis. Gantikan file lama dengan ini.");
+    }
+
+    window.onload = loadInitialData;
+</script>
+
+</body>
+</html>
