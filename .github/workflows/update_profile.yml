@@ -2,25 +2,26 @@ name: Sakurazaka Auto Sync
 
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *' # Jalan otomatis setiap jam 00:00 UTC
+  workflow_dispatch: # PENTING: Ini agar tombol di Web bisa men-trigger file ini
 
 permissions:
-  contents: write  # PENTING: Agar bot bisa push perubahan ke repo
+  contents: write
 
 jobs:
   update-json:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v4 # Update ke v4
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4 # Update ke v4
+        uses: actions/setup-node@v4
         with:
-          node-version: 20 # Gunakan Node terbaru yang sudah dukung fetch bawaan
+          node-version: 20
 
       - name: Jalankan Scraper
+        # Action ini akan menjalankan file update_member.js kamu
         run: node update_member.js
 
       - name: Push Perubahan
